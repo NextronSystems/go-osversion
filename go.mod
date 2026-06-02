@@ -1,3 +1,3 @@
 module github.com/NextronSystems/go-osversion
 
-go 1.26.3
+go 1.15
