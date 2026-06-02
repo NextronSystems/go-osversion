@@ -12,6 +12,13 @@ import (
 	"strings"
 )
 
+var (
+	osReleasePath     = "/etc/os-release"
+	debianVersionPath = "/etc/debian_version"
+	redhatReleasePath = "/etc/redhat-release"
+	suseReleasePath   = "/etc/SuSe-release"
+)
+
 func Get() (string, error) {
 	if version := getFromOSRelease(); version != "" {
 		return version, nil
@@ -32,7 +39,7 @@ func Get() (string, error) {
 }
 
 func getFromOSRelease() string {
-	b, err := readFileSafe("/etc/os-release")
+	b, err := readFileSafe(osReleasePath)
 	if err != nil {
 		return ""
 	}
@@ -51,41 +58,36 @@ func getFromOSRelease() string {
 }
 
 func getFromDebianVersion() string {
-	b, err := readFileSafe("/etc/debian_version")
+	b, err := readFileSafe(debianVersionPath)
 	if err != nil {
 		return ""
 	}
 	r := bufio.NewReader(bytes.NewReader(b))
-	line, err := r.ReadString('\n')
-	if err != nil {
+	line, _ := r.ReadString('\n')
+	line = strings.TrimSuffix(line, "\n")
+	if line == "" {
 		return ""
 	}
-	return "Debian " + strings.TrimSuffix(line, "\n")
+	return "Debian " + line
 }
 
 func getFromRedhatRelease() string {
-	b, err := readFileSafe("/etc/redhat-release")
+	b, err := readFileSafe(redhatReleasePath)
 	if err != nil {
 		return ""
 	}
 	r := bufio.NewReader(bytes.NewReader(b))
-	line, err := r.ReadString('\n')
-	if err != nil {
-		return ""
-	}
+	line, _ := r.ReadString('\n')
 	return strings.TrimSuffix(line, "\n")
 }
 
 func getFromSuSeRelease() string {
-	b, err := readFileSafe("/etc/SuSe-release")
+	b, err := readFileSafe(suseReleasePath)
 	if err != nil {
 		return ""
 	}
 	r := bufio.NewReader(bytes.NewReader(b))
-	line, err := r.ReadString('\n')
-	if err != nil {
-		return ""
-	}
+	line, _ := r.ReadString('\n')
 	return strings.TrimSuffix(line, "\n")
 }
 
