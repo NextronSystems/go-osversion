@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// declared as variables to allow tests to override them
 var (
 	osReleasePath     = "/etc/os-release"
 	debianVersionPath = "/etc/debian_version"
