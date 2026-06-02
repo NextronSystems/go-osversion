@@ -1,4 +1,5 @@
-//+build linux
+//go:build linux
+// +build linux
 
 package osversion
 
@@ -9,6 +10,14 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+)
+
+// declared as variables to allow tests to override them
+var (
+	osReleasePath     = "/etc/os-release"
+	debianVersionPath = "/etc/debian_version"
+	redhatReleasePath = "/etc/redhat-release"
+	suseReleasePath   = "/etc/SuSe-release"
 )
 
 func Get() (string, error) {
@@ -31,60 +40,55 @@ func Get() (string, error) {
 }
 
 func getFromOSRelease() string {
-	b, err := readFileSafe("/etc/os-release")
+	b, err := readFileSafe(osReleasePath)
 	if err != nil {
 		return ""
 	}
 	r := bufio.NewReader(bytes.NewReader(b))
 	for {
 		line, err := r.ReadString('\n')
+		line = strings.TrimRight(line, "\n")
+		// PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
+		if strings.HasPrefix(line, `PRETTY_NAME="`) && strings.HasSuffix(line, `"`) && len(line) >= 14 {
+			return line[13 : len(line)-1]
+		}
 		if err != nil {
 			return ""
 		}
-		// PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
-		if strings.HasPrefix(line, `PRETTY_NAME="`) && len(line) >= 15 {
-			return line[13 : len(line)-2]
-		}
 	}
-	return ""
 }
 
 func getFromDebianVersion() string {
-	b, err := readFileSafe("/etc/debian_version")
+	b, err := readFileSafe(debianVersionPath)
 	if err != nil {
 		return ""
 	}
 	r := bufio.NewReader(bytes.NewReader(b))
-	line, err := r.ReadString('\n')
-	if err != nil {
+	line, _ := r.ReadString('\n')
+	line = strings.TrimSuffix(line, "\n")
+	if line == "" {
 		return ""
 	}
-	return "Debian " + strings.TrimSuffix(line, "\n")
+	return "Debian " + line
 }
 
 func getFromRedhatRelease() string {
-	b, err := readFileSafe("/etc/redhat-release")
+	b, err := readFileSafe(redhatReleasePath)
 	if err != nil {
 		return ""
 	}
 	r := bufio.NewReader(bytes.NewReader(b))
-	line, err := r.ReadString('\n')
-	if err != nil {
-		return ""
-	}
+	line, _ := r.ReadString('\n')
 	return strings.TrimSuffix(line, "\n")
 }
 
 func getFromSuSeRelease() string {
-	b, err := readFileSafe("/etc/SuSe-release")
+	b, err := readFileSafe(suseReleasePath)
 	if err != nil {
 		return ""
 	}
 	r := bufio.NewReader(bytes.NewReader(b))
-	line, err := r.ReadString('\n')
-	if err != nil {
-		return ""
-	}
+	line, _ := r.ReadString('\n')
 	return strings.TrimSuffix(line, "\n")
 }
 
@@ -99,7 +103,7 @@ func getFromLSB() string {
 	if err != nil {
 		return ""
 	}
-	return string(os) + " " + string(ver)
+	return strings.TrimSpace(string(os)) + " " + strings.TrimSpace(string(ver))
 }
 
 func getFromUname() (string, error) {
@@ -113,7 +117,7 @@ func getFromUname() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not execute uname: %s", err)
 	}
-	return string(os) + " " + string(ver), nil
+	return strings.TrimSpace(string(os)) + " " + strings.TrimSpace(string(ver)), nil
 }
 
 func readFileSafe(path string) ([]byte, error) {
