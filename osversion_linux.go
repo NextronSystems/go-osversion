@@ -1,4 +1,5 @@
-//+build linux
+//go:build linux
+// +build linux
 
 package osversion
 
@@ -99,7 +100,7 @@ func getFromLSB() string {
 	if err != nil {
 		return ""
 	}
-	return string(os) + " " + string(ver)
+	return strings.TrimSpace(string(os)) + " " + strings.TrimSpace(string(ver))
 }
 
 func getFromUname() (string, error) {
@@ -113,7 +114,7 @@ func getFromUname() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not execute uname: %s", err)
 	}
-	return string(os) + " " + string(ver), nil
+	return strings.TrimSpace(string(os)) + " " + strings.TrimSpace(string(ver)), nil
 }
 
 func readFileSafe(path string) ([]byte, error) {
