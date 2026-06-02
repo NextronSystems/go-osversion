@@ -39,15 +39,15 @@ func getFromOSRelease() string {
 	r := bufio.NewReader(bytes.NewReader(b))
 	for {
 		line, err := r.ReadString('\n')
+		line = strings.TrimRight(line, "\n")
+		// PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
+		if strings.HasPrefix(line, `PRETTY_NAME="`) && strings.HasSuffix(line, `"`) && len(line) >= 14 {
+			return line[13 : len(line)-1]
+		}
 		if err != nil {
 			return ""
 		}
-		// PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
-		if strings.HasPrefix(line, `PRETTY_NAME="`) && len(line) >= 15 {
-			return line[13 : len(line)-2]
-		}
 	}
-	return ""
 }
 
 func getFromDebianVersion() string {
